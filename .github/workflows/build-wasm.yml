@@ -1,0 +1,47 @@
+name: Build RubberBand WASM
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Install Emscripten SDK
+      uses: emscripten/emsdk@v1
+
+    - name: Build RubberBand WASM
+      run: |
+        # ソース一覧を作成
+        find src -name '*.cpp' > files.txt
+
+        # emcc で一発ビルド
+        emcc \
+          -O3 \
+          -std=c++17 \
+          -I src \
+          @files.txt \
+          -DRB_USE_STUB_THREAD=1 \
+          -s ALLOW_MEMORY_GROWTH=1 \
+          -s INITIAL_MEMORY=134217728 \
+          -s MODULARIZE=1 \
+          -s EXPORT_NAME="RubberBandModule" \
+          -s ENVIRONMENT="web" \
+          -s EXPORTED_FUNCTIONS="['_rubberband_new','_rubberband_set_expected_input_duration','_rubberband_set_max_process_size','_rubberband_study','_rubberband_process','_rubberband_get_samples_required','_rubberband_retrieve','_rubberband_delete']" \
+          -o rubberband.js
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: rubberband-wasm
+        path: |
+          rubberband.js
+          rubberband.wasm
