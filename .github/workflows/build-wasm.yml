@@ -27,15 +27,15 @@ jobs:
           source ./emsdk_env.sh
           cd ..
 
-      - name: Build with emcc
+      - name: Build with emcc (exclude Thread.cpp)
         run: |
-          # 再度環境を読み込み
+          # Emscripten 環境読み込み
           source emsdk/emsdk_env.sh
 
-          # ビルド対象の .cpp をリスト化
-          find src -name '*.cpp' > files.txt
+          # Thread.cpp を除外して .cpp 一覧を files.txt に
+          find src -name '*.cpp' ! -name 'Thread.cpp' > files.txt
 
-          # emcc でコンパイル（スレッド無効化フラグ付き）
+          # コンパイル
           ./emsdk/upstream/emscripten/emcc \
             -O3 \
             -std=c++17 \
