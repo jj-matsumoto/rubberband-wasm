@@ -15,41 +15,45 @@ jobs:
         shell: bash
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install Emscripten SDK
-      run: |
-        git clone https://github.com/emscripten-core/emsdk.git
-        cd emsdk
-        ./emsdk install latest
-        ./emsdk activate latest
-        source ./emsdk_env.sh
-        cd ..
-        echo "Emscripten activated"
+      - name: Install Emscripten SDK
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+          cd ..
 
-    - name: Build with emcc
-      run: |
-        source emsdk/emsdk_env.sh
-        find src -name '*.cpp' > files.txt
-        ./emsdk/upstream/emscripten/emcc \
-          -O3 \
-          -std=c++17 \
-          -I src \
-          @files.txt \
-          -DRB_USE_STUB_THREAD=1 \
-          -s ALLOW_MEMORY_GROWTH=1 \
-          -s INITIAL_MEMORY=134217728 \
-          -s MODULARIZE=1 \
-          -s EXPORT_NAME="RubberBandModule" \
-          -s ENVIRONMENT="web" \
-          -s EXPORTED_FUNCTIONS="['_rubberband_new','_rubberband_delete','_rubberband_process']" \
-          -o rubberband.js
+      - name: Build with emcc
+        run: |
+          # 再度環境を読み込み
+          source emsdk/emsdk_env.sh
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: rubberband-wasm
-        path: |
-          rubberband.js
-          rubberband.wasm
+          # ビルド対象の .cpp をリスト化
+          find src -name '*.cpp' > files.txt
+
+          # emcc でコンパイル（スレッド無効化フラグ付き）
+          ./emsdk/upstream/emscripten/emcc \
+            -O3 \
+            -std=c++17 \
+            -I src \
+            @files.txt \
+            -DRB_NO_THREADS=1 \
+            -s ALLOW_MEMORY_GROWTH=1 \
+            -s INITIAL_MEMORY=134217728 \
+            -s MODULARIZE=1 \
+            -s EXPORT_NAME="RubberBandModule" \
+            -s ENVIRONMENT="web" \
+            -s EXPORTED_FUNCTIONS="['_rubberband_new','_rubberband_delete','_rubberband_process']" \
+            -o rubberband.js
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rubberband-wasm
+          path: |
+            rubberband.js
+            rubberband.wasm
