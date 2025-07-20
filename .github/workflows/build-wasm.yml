@@ -27,23 +27,29 @@ jobs:
           source ./emsdk_env.sh
           cd ..
 
+      - name: Prepare includes & file list
+        run: |
+          # link sysutils.h into a 'system' folder so includes of "system/sysutils.h" work
+          mkdir -p src/common/system
+          ln -sf ../sysutils.h src/common/system/sysutils.h
+
+          # list all .cpp except Thread/Resampler/Profiler
+          find src -name '*.cpp' \
+            ! -name 'Thread.cpp' \
+            ! -name 'Resampler.cpp' \
+            ! -name 'Profiler.cpp' \
+            > files.txt
+
       - name: Build with emcc
         run: |
           source emsdk/emsdk_env.sh
 
-          # コンパイル対象ファイル一覧（必要に応じて除外）
-          find src -name '*.cpp' \
-            ! -name 'Thread.cpp' \
-            ! -name 'Resampler.cpp' \
-            ! -name 'Profiler.cpp' > files.txt
-
-          # VectorOpsComplex.cpp などで system/sysutils.h を見つけるため
-          # src/common を追加でインクルード
           ./emsdk/upstream/emscripten/emcc \
             -O3 \
             -std=c++17 \
-            -I src \
-            -I src/common \
+            -Isrc \
+            -Isrc/common \
+            -Isrc/common/system \
             @files.txt \
             -DRB_USE_STUB_THREAD=1 \
             -s ALLOW_MEMORY_GROWTH=1 \
