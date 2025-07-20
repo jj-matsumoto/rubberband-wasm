@@ -41,7 +41,7 @@ jobs:
             -std=c++17 \
             -I src \
             @files.txt \
-            -DRB_NO_THREADS=1 \
+            -DRB_USE_STUB_THREAD=1 \
             -s ALLOW_MEMORY_GROWTH=1 \
             -s INITIAL_MEMORY=134217728 \
             -s MODULARIZE=1 \
