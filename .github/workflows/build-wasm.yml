@@ -1,6 +1,5 @@
 name: Build RubberBand WASM
 
-
 on:
   workflow_dispatch:
   push:
@@ -28,22 +27,20 @@ jobs:
           source ./emsdk_env.sh
           cd ..
 
-      - name: Build with emcc
+      - name: Build with emcc (exclude Thread & Resampler)
         run: |
-          # Emscripten 環境の読み込み
           source emsdk/emsdk_env.sh
+          # Thread.cpp と Resampler.cpp を除外
+          find src -name '*.cpp' \
+            ! -name 'Thread.cpp' \
+            ! -name 'Resampler.cpp' > files.txt
 
-          # Thread.cpp を除外（stub-thread で対応）
-          find src -name '*.cpp' ! -name 'Thread.cpp' > files.txt
-
-          # コンパイル。線形リサンプラーを選択
           ./emsdk/upstream/emscripten/emcc \
             -O3 \
             -std=c++17 \
             -I src \
             @files.txt \
             -DRB_USE_STUB_THREAD=1 \
-            -DRB_USE_LINEAR_RESAMPLER=1 \
             -s ALLOW_MEMORY_GROWTH=1 \
             -s INITIAL_MEMORY=134217728 \
             -s MODULARIZE=1 \
