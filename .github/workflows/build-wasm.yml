@@ -10,12 +10,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Emscripten SDK
+    - name: Install Emscripten SDK
       run: |
         git clone https://github.com/emscripten-core/emsdk.git
         cd emsdk
@@ -23,9 +26,11 @@ jobs:
         ./emsdk activate latest
         source ./emsdk_env.sh
         cd ..
+        echo "Emscripten activated"
 
-    - name: Build RubberBand WASM
+    - name: Build with emcc
       run: |
+        source emsdk/emsdk_env.sh
         find src -name '*.cpp' > files.txt
         ./emsdk/upstream/emscripten/emcc \
           -O3 \
@@ -38,7 +43,7 @@ jobs:
           -s MODULARIZE=1 \
           -s EXPORT_NAME="RubberBandModule" \
           -s ENVIRONMENT="web" \
-          -s EXPORTED_FUNCTIONS="['_rubberband_new','_rubberband_set_expected_input_duration','_rubberband_set_max_process_size','_rubberband_study','_rubberband_process','_rubberband_get_samples_required','_rubberband_retrieve','_rubberband_delete']" \
+          -s EXPORTED_FUNCTIONS="['_rubberband_new','_rubberband_delete','_rubberband_process']" \
           -o rubberband.js
 
     - name: Upload artifacts
