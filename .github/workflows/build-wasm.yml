@@ -27,13 +27,16 @@ jobs:
           source ./emsdk_env.sh
           cd ..
 
-      - name: Build with emcc (exclude Thread & Resampler)
+      - name: Build with emcc (exclude threads/resampler/profiler)
         run: |
           source emsdk/emsdk_env.sh
-          # Thread.cpp と Resampler.cpp を除外
+
+          # Thread.cpp, Resampler.cpp, Profiler.cpp を一覧から除外
           find src -name '*.cpp' \
             ! -name 'Thread.cpp' \
-            ! -name 'Resampler.cpp' > files.txt
+            ! -name 'Resampler.cpp' \
+            ! -name 'Profiler.cpp' \
+            > files.txt
 
           ./emsdk/upstream/emscripten/emcc \
             -O3 \
